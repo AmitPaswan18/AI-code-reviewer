@@ -1,0 +1,24 @@
+{
+  "name": "@ai-code-reviewer/root",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "build:packages": "pnpm --filter @repo/db run build && pnpm --filter @ai-platform/ai-core run build",
+    "dev": "concurrently -n \"WEB,API\" -c \"bgBlue.bold,bgMagenta.bold\" \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
+    "dev:turbo": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:generate": "pnpm --filter @repo/db run generate",
+    "db:push": "pnpm --filter @repo/db run push"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.28.1",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "latest",
+    "turbo": "latest"
+  }
+}

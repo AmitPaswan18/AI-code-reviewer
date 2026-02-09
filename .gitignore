@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /apps/web/node_modules
+/apps/api/node_modules
 /apps/web/.next
 /.pnp
 .pnp.js
