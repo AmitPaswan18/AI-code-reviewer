@@ -1,10 +1,12 @@
+"use client";
+
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { AppLayout } from "@/components/AppLayout";
 import { RiskBadge } from "@/components/Indicator";
 import { StatusIndicator } from "@/components/StatusIndicator";
 import { FindingCard } from "@/components/FindingCard";
-import { mockPRs } from "@/lib/mock-data";
+import { mockPRs, ReviewFinding } from "@/lib/mock-data";
 import {
   ArrowLeft,
   GitBranch,
@@ -12,7 +14,6 @@ import {
   FileText,
   Plus,
   Minus,
-  ExternalLink,
   ThumbsUp,
   ThumbsDown,
   MessageSquare,
@@ -25,7 +26,7 @@ const PRDetail = () => {
   const params = useParams();
   const id = params?.id as string;
   const pr = mockPRs.find((p) => p.id === id);
-  const [streamedFindings, setStreamedFindings] = useState<any>([]);
+  const [streamedFindings, setStreamedFindings] = useState<ReviewFinding[]>([]);
 
   useEffect(() => {
     if (!pr) return;

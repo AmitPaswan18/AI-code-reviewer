@@ -1,79 +1,198 @@
 "use client";
 
+import { useState } from "react";
 import { AppLayout } from "@/components/AppLayout";
-import { mockRepos } from "@/lib/mock-data";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+import { useUser } from "@clerk/nextjs";
+import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { GitBranch, Settings, Clock } from "lucide-react";
+import { GitBranch, Star, Lock, Globe, Loader2 } from "lucide-react";
+
+import { useGithubRepos } from "@/hooks/use-github";
+import { Repository } from "@/types";
+
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
 
 const Repos = () => {
+  const { user, isLoaded } = useUser();
+  const [page, setPage] = useState(1);
+  const limit = 10;
+
+  const { data, isLoading, error } = useGithubRepos(user?.id!, page, limit);
+
+  const totalPages = data?.totalPages || 1;
+
+  if (!isLoaded) {
+    return (
+      <AppLayout>
+        <div className="flex justify-center items-center h-full">
+          <Loader2 className="w-8 h-8 animate-spin" />
+        </div>
+      </AppLayout>
+    );
+  }
+
   return (
     <AppLayout>
       <div className="space-y-6">
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
           <h1 className="text-xl font-semibold text-foreground">
-            Repositories
+            Repositories {data?.total ? `(${data.total})` : ""}
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Configure AI review for your repositories
+            Browse all your GitHub repositories
           </p>
         </motion.div>
 
-        <div className="space-y-2">
-          {mockRepos.map((repo, i) => (
-            <motion.div
-              key={repo.id}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
-              className="glass rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-md bg-secondary flex items-center justify-center">
-                    <GitBranch className="w-4 h-4 text-secondary-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-medium text-foreground">
-                      {repo.fullName}
-                    </h3>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      {repo.lastReview && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-3 h-3" /> {repo.lastReview}
-                        </span>
+        {isLoading ? (
+          <div className="flex justify-center py-20">
+            <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-500">
+            Failed to load repositories. Please ensure your GitHub account is
+            connected.
+          </div>
+        ) : (
+          <div className="border rounded-md">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[300px]">Repository</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Language</TableHead>
+                  <TableHead>Stars</TableHead>
+                  <TableHead className="text-right">Last Updated</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data?.repositories?.map((repo: Repository) => (
+                  <TableRow key={repo.githubRepoId}>
+                    <TableCell className="font-medium">
+                      <div className="flex items-center gap-2">
+                        <GitBranch className="w-4 h-4 text-muted-foreground" />
+                        <div className="flex flex-col">
+                          <div className="flex items-center gap-2">
+                            <a
+                              href={repo.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:underline">
+                              {repo.name}
+                            </a>
+                            <Badge
+                              variant="outline"
+                              className="text-[10px] h-5 px-1">
+                              {repo.defaultBranch}
+                            </Badge>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {repo.fullName}
+                          </span>
+                          {repo.description && (
+                            <span
+                              className="text-xs text-muted-foreground truncate max-w-[300px]"
+                              title={repo.description}>
+                              {repo.description}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={repo.isPrivate ? "secondary" : "outline"}
+                        className="gap-1">
+                        {repo.isPrivate ? (
+                          <Lock className="w-3 h-3" />
+                        ) : (
+                          <Globe className="w-3 h-3" />
+                        )}
+                        {repo.isPrivate ? "Private" : "Public"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {repo.language ? (
+                        <Badge variant="outline">{repo.language}</Badge>
+                      ) : (
+                        "-"
                       )}
-                      <span className="text-xs font-mono text-muted-foreground">
-                        {repo.totalReviews} reviews
-                      </span>
-                    </div>
-                  </div>
-                </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3" />
+                        {repo.stars || 0}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {repo.updatedAt
+                        ? format(new Date(repo.updatedAt), "MMM d, yyyy")
+                        : "-"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        )}
 
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      Auto-review
-                    </span>
-                    <Switch checked={repo.autoReview} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      Test gen
-                    </span>
-                    <Switch checked={repo.testGeneration} />
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">
-                      Enabled
-                    </span>
-                    <Switch checked={repo.enabled} />
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </div>
+        {totalPages > 1 && (
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page > 1) setPage((p) => p - 1);
+                  }}
+                  className={
+                    page <= 1
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+
+              <PaginationItem>
+                <PaginationLink isActive href="#">
+                  {page}
+                </PaginationLink>
+              </PaginationItem>
+
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (page < totalPages) setPage((p) => p + 1);
+                  }}
+                  className={
+                    page >= totalPages
+                      ? "pointer-events-none opacity-50"
+                      : "cursor-pointer"
+                  }
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
     </AppLayout>
   );

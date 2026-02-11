@@ -1,0 +1,128 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id                     String         @id @default(uuid())
+  clerkId                String         @unique @map("clerk_id")
+  email                  String         @unique
+  fullName               String?        @map("full_name")
+  avatarUrl              String?        @map("avatar_url")
+  githubUsername         String?        @map("github_username")
+  githubAccessToken      String?        @map("github_access_token")
+  githubRefreshToken     String?        @map("github_refresh_token")
+  githubTokenExpiresAt   DateTime?      @map("github_token_expires_at")
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+  lastLoginAt            DateTime?      @map("last_login_at")
+  
+  repositories           Repository[]
+
+  @@index([email])
+  @@index([clerkId])
+  @@index([githubUsername])
+  @@map("users")
+}
+
+model Repository {
+  id              String        @id @default(uuid())
+  userId          String        @map("user_id")
+  githubRepoId    BigInt        @unique @map("github_repo_id")
+  repoName        String        @map("repo_name")
+  repoFullName    String        @map("repo_full_name")
+  repoOwner       String        @map("repo_owner")
+  isPrivate       Boolean       @default(false) @map("is_private")
+  description     String?
+  defaultBranch   String        @default("main") @map("default_branch")
+  webhookId       BigInt?       @map("webhook_id")
+  isActive        Boolean       @default(true) @map("is_active")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  updatedAt       DateTime      @updatedAt @map("updated_at")
+  
+  user            User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pullRequests    PullRequest[]
+
+  @@index([userId])
+  @@index([githubRepoId])
+  @@map("repositories")
+}
+
+model PullRequest {
+  id              String          @id @default(uuid())
+  repositoryId    String          @map("repository_id")
+  githubPrId      BigInt          @map("github_pr_id")
+  prNumber        Int             @map("pr_number")
+  title           String
+  description     String?
+  author          String
+  status          PRStatus        @default(OPEN)
+  baseBranch      String          @map("base_branch")
+  headBranch      String          @map("head_branch")
+  commitSha       String          @map("commit_sha")
+  reviewStatus    ReviewStatus    @default(PENDING) @map("review_status")
+  riskScore       Int?            @map("risk_score")
+  aiSummary       String?         @map("ai_summary")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+  reviewedAt      DateTime?       @map("reviewed_at")
+  
+  repository      Repository      @relation(fields: [repositoryId], references: [id], onDelete: Cascade)
+  reviewComments  ReviewComment[]
+
+  @@index([repositoryId])
+  @@index([githubPrId])
+  @@index([status])
+  @@map("pull_requests")
+}
+
+model ReviewComment {
+  id              String        @id @default(uuid())
+  pullRequestId   String        @map("pull_request_id")
+  githubCommentId BigInt?       @map("github_comment_id")
+  filePath        String?       @map("file_path")
+  lineNumber      Int?          @map("line_number")
+  commentType     CommentType   @map("comment_type")
+  severity        Severity
+  message         String
+  codeSnippet     String?       @map("code_snippet")
+  aiGenerated     Boolean       @default(true) @map("ai_generated")
+  createdAt       DateTime      @default(now()) @map("created_at")
+  
+  pullRequest     PullRequest   @relation(fields: [pullRequestId], references: [id], onDelete: Cascade)
+
+  @@index([pullRequestId])
+  @@map("review_comments")
+}
+
+enum PRStatus {
+  OPEN
+  CLOSED
+  MERGED
+}
+
+enum ReviewStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+enum CommentType {
+  SUGGESTION
+  BUG
+  SECURITY
+  PERFORMANCE
+  STYLE
+}
+
+enum Severity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}

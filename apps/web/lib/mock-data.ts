@@ -56,12 +56,12 @@ export interface DashboardStats {
 
 // Mock data
 export const mockStats: DashboardStats = {
-    totalPRs: 247,
-    reviewedToday: 12,
-    avgRiskScore: 34,
-    issuesCaught: 891,
-    timeSaved: "142h",
-    costSaved: "$4,280",
+    totalPRs: 0,
+    reviewedToday: 0,
+    avgRiskScore: 0,
+    issuesCaught: 0,
+    timeSaved: "0h",
+    costSaved: "$0",
 };
 
 export const mockPRs: PRData[] = [
