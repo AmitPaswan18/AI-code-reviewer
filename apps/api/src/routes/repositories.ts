@@ -260,6 +260,79 @@ export async function repositoryRoutes(fastify: FastifyInstance) {
         }
     });
 
+    // Fetch pull requests for a specific repo
+    fastify.get('/api/repos/:owner/:repo/pulls', async (request: FastifyRequest<{ Params: { owner: string; repo: string }; Querystring: { clerkId: string; state?: string; page?: string; per_page?: string } }>, reply: FastifyReply) => {
+        try {
+            const { owner, repo } = request.params;
+            const { clerkId, state = 'all', page = '1', per_page = '30' } = request.query;
+
+            if (!clerkId) {
+                return reply.code(400).send({ error: 'clerkId is required' });
+            }
+
+            const user = await prisma.user.findUnique({
+                where: { clerkId }
+            });
+
+            if (!user || !user.githubAccessToken) {
+                return reply.code(400).send({ error: 'GitHub account not connected' });
+            }
+
+            let accessToken;
+            try {
+                accessToken = decrypt(user.githubAccessToken);
+            } catch (error) {
+                return reply.code(500).send({ error: 'Authentication error' });
+            }
+
+            const octokit = new Octokit({ auth: accessToken });
+
+            const { data: pulls } = await octokit.pulls.list({
+                owner,
+                repo,
+                state: state as 'open' | 'closed' | 'all',
+                per_page: parseInt(per_page),
+                page: parseInt(page),
+                sort: 'updated',
+                direction: 'desc',
+            });
+
+            const pullRequests = pulls.map((pr: any) => ({
+                id: pr.id,
+                number: pr.number,
+                title: pr.title,
+                state: pr.state,
+                author: pr.user?.login || 'unknown',
+                authorAvatar: pr.user?.avatar_url || '',
+                createdAt: pr.created_at,
+                updatedAt: pr.updated_at,
+                branch: pr.head?.ref || '',
+                commitSHA: pr.head?.sha?.substring(0, 7) || '',
+                additions: pr.additions || 0,
+                deletions: pr.deletions || 0,
+                filesChanged: pr.changed_files || 0,
+                url: pr.html_url,
+                draft: pr.draft || false,
+            }));
+
+            return reply.send({
+                count: pullRequests.length,
+                pulls: pullRequests,
+                repo: `${owner}/${repo}`,
+            });
+        } catch (error: any) {
+            fastify.log.error(error);
+
+            if (error.status === 404) {
+                return reply.code(404).send({ error: 'Repository not found' });
+            }
+            if (error.status === 401) {
+                return reply.code(401).send({ error: 'GitHub token expired or invalid. Please reconnect.' });
+            }
+
+            return reply.code(500).send({ error: 'Failed to fetch pull requests' });
+        }
+    });
 
     fastify.delete('/api/repos/:id', async (request: FastifyRequest<{ Params: { id: string }, Querystring: { clerkId: string } }>, reply: FastifyReply) => {
         try {

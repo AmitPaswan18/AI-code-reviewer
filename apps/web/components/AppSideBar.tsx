@@ -10,11 +10,15 @@ const navItems = [
   { path: "/repos", label: "Repositories", icon: Settings },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({ className }: { className?: string }) {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed left-0 top-0 bottom-0 w-56 bg-sidebar-background border-r border-sidebar-border flex flex-col z-30">
+    <aside
+      className={cn(
+        "w-56 bg-sidebar-background border-r border-sidebar-border flex flex-col z-40",
+        className,
+      )}>
       <div className="p-4 border-b border-sidebar-border">
         <Link href="/" className="flex items-center gap-2">
           <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">

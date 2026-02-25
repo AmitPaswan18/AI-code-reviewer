@@ -34,7 +34,7 @@ export function PRCard({ pr, index = 0 }: PRCardProps) {
             <h3 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
               {pr.title}
             </h3>
-            <div className="flex items-center gap-3 mt-2">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 mt-2">
               <div className="flex items-center gap-1">
                 <div className="w-5 h-5 rounded-full bg-secondary flex items-center justify-center text-[10px] font-medium text-secondary-foreground">
                   {pr.authorAvatar}

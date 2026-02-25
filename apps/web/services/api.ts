@@ -74,6 +74,14 @@ export const apiService = {
         const response = await api.get(`/repos/saved?clerkId=${clerkId}`)
         return response.data
     },
+    getRepoPulls: async (clerkId: string, owner: string, repo: string) => {
+        const response = await api.get(`/repos/${owner}/${repo}/pulls?clerkId=${clerkId}&state=all`)
+        return response.data
+    },
+    searchGithubRepos: async (clerkId: string, query: string, page: number = 1, limit: number = 100) => {
+        const response = await api.get(`/repos?clerkId=${clerkId}&page=${page}&limit=${limit}`)
+        return response.data
+    },
 }
 
 export default apiService

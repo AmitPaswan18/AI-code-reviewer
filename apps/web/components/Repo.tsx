@@ -74,11 +74,15 @@ const Repos = () => {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[300px]">Repository</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Language</TableHead>
-                  <TableHead>Stars</TableHead>
-                  <TableHead className="text-right">Last Updated</TableHead>
+                  <TableHead className="min-w-[200px]">Repository</TableHead>
+                  <TableHead className="hidden sm:table-cell">Status</TableHead>
+                  <TableHead className="hidden md:table-cell">
+                    Language
+                  </TableHead>
+                  <TableHead className="hidden md:table-cell">Stars</TableHead>
+                  <TableHead className="text-right whitespace-nowrap">
+                    Updated
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -115,7 +119,7 @@ const Repos = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden sm:table-cell">
                       <Badge
                         variant={repo.isPrivate ? "secondary" : "outline"}
                         className="gap-1">
@@ -127,20 +131,20 @@ const Repos = () => {
                         {repo.isPrivate ? "Private" : "Public"}
                       </Badge>
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       {repo.language ? (
                         <Badge variant="outline">{repo.language}</Badge>
                       ) : (
                         "-"
                       )}
                     </TableCell>
-                    <TableCell>
+                    <TableCell className="hidden md:table-cell">
                       <div className="flex items-center gap-1">
                         <Star className="w-3 h-3" />
                         {repo.stars || 0}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-muted-foreground">
+                    <TableCell className="text-right text-muted-foreground whitespace-nowrap text-xs sm:text-sm">
                       {repo.updatedAt
                         ? format(new Date(repo.updatedAt), "MMM d, yyyy")
                         : "-"}
