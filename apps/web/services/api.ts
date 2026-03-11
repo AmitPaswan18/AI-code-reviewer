@@ -82,6 +82,14 @@ export const apiService = {
         const response = await api.get(`/repos?clerkId=${clerkId}&page=${page}&limit=${limit}`)
         return response.data
     },
+    reviewPullRequest: async (clerkId: string, owner: string, repo: string, pullNumber: string | number) => {
+        const response = await api.post(`/repos/${owner}/${repo}/pulls/${pullNumber}/review`, { clerkId })
+        return response.data
+    },
+    getPullRequestById: async (clerkId: string, prId: string) => {
+        const response = await api.get(`/pulls/${prId}?clerkId=${clerkId}`)
+        return response.data
+    },
 }
 
 export default apiService

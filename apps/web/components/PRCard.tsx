@@ -23,7 +23,7 @@ export function PRCard({ pr, index = 0 }: PRCardProps) {
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              <GitPullRequest className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+              <GitPullRequest className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="text-xs font-mono text-muted-foreground">
                 {pr.repo}
               </span>
@@ -62,19 +62,22 @@ export function PRCard({ pr, index = 0 }: PRCardProps) {
               </span>
             </div>
           </div>
-          <div className="flex flex-col items-end gap-2 flex-shrink-0">
+          <div className="flex flex-col items-end gap-2 shrink-0">
             <RiskBadge level={pr.riskLevel} score={pr.riskScore} />
             <StatusIndicator status={pr.status} />
           </div>
         </div>
-        {pr.reviewFindings.length > 0 && (
+        {(pr.reviewFindings?.length ?? 0) > 0 && (
           <div className="mt-3 pt-3 border-t border-border">
             <span className="text-xs text-muted-foreground">
-              {pr.reviewFindings.length} finding
-              {pr.reviewFindings.length > 1 ? "s" : ""} ·{" "}
+              {pr.reviewFindings!.length} finding
+              {pr.reviewFindings!.length > 1 ? "s" : ""} ·{" "}
               {
-                pr.reviewFindings.filter(
-                  (f) => f.severity === "critical" || f.severity === "high",
+                pr.reviewFindings!.filter(
+                  (f) => {
+                    const sev = (f.severity as string).toLowerCase();
+                    return sev === "critical" || sev === "high";
+                  }
                 ).length
               }{" "}
               critical/high

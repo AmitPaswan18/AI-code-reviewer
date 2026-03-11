@@ -53,6 +53,7 @@ const Dashboard = () => {
     fullName: string;
   } | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+  const [reviewingPrId, setReviewingPrId] = useState<number | null>(null);
 
   const { data: stats, isLoading: statsLoading } = useDashboardStats(user?.id);
   const { data: recentIPrs, isLoading: prsLoading } = useRecentPRs(user?.id);
@@ -471,10 +472,47 @@ const Dashboard = () => {
                               </span>
                             </div>
                           </div>
-                          <div className="flex-shrink-0 text-right">
-                            <span className="text-[10px] font-mono text-muted-foreground">
+                          <div className="flex-shrink-0 text-right flex flex-col gap-2 items-end">
+                            <span className="text-[10px] font-mono text-muted-foreground mr-1">
                               {pr.commitSHA}
                             </span>
+                            <Button
+                              size="sm"
+                              variant="secondary"
+                              disabled={reviewingPrId === pr.number}
+                              className="h-7 text-xs bg-primary/10 hover:bg-primary/20 text-primary min-w-[100px]"
+                              onClick={async (e) => {
+                                e.preventDefault();
+                                if (!user?.id || !selectedRepo) return;
+                                
+                                setReviewingPrId(pr.number);
+                                try {
+                                    const res = await apiService.reviewPullRequest(user.id, selectedRepo.owner, selectedRepo.name, pr.number);
+                                    if (res.pullRequest?.id) {
+                                        router.push(`/pr/${res.pullRequest.id}`);
+                                    } else {
+                                        alert("Review completed but couldn't load the detail page.");
+                                        window.location.reload();
+                                    }
+                                } catch (error) {
+                                    alert("Failed to review PR. Please check your AI API key and connection.");
+                                } finally {
+                                    setReviewingPrId(null);
+                                }
+                              }}
+                            >
+                              {reviewingPrId === pr.number ? (
+                                <>
+                                  <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                                  Reviewing...
+                                </>
+                              ) : (
+                                <>
+                                  <Shield className="w-3 h-3 mr-1" />
+                                  Review Code
+                                </>
+                              )}
+                            </Button>
                           </div>
                         </div>
                       </a>

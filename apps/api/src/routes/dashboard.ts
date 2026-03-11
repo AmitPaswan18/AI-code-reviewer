@@ -41,14 +41,36 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
                 where: { repository: { userId: user.id } }
             });
 
+            // Total issues caught
+            const issuesCaught = await prisma.reviewComment.count({
+                where: { pullRequest: { repository: { userId: user.id } } }
+            });
+
+            // average risk
+            const prsWithRisk = await prisma.pullRequest.findMany({
+                where: { repository: { userId: user.id }, riskScore: { not: null } }
+            });
+            const sumScore = prsWithRisk.reduce((acc, pr) => acc + (pr.riskScore || 0), 0);
+            const avgRiskScore = prsWithRisk.length ? Math.round(sumScore / prsWithRisk.length) : 0;
+
+            // reviewed today
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const reviewedToday = await prisma.pullRequest.count({
+                where: {
+                    repository: { userId: user.id },
+                    reviewedAt: { gte: startOfDay }
+                }
+            });
+
             // Mock other stats for now as we don't have them populated
             return reply.send({
                 totalPRs: prCount,
-                reviewedToday: 0,
-                avgRiskScore: 0,
-                issuesCaught: 0,
-                timeSaved: "0h",
-                costSaved: "$0",
+                reviewedToday,
+                avgRiskScore,
+                issuesCaught,
+                timeSaved: `${prCount * 2}h`,
+                costSaved: `$${prCount * 150}`,
                 repoCount
             });
         } catch (error) {
@@ -86,11 +108,17 @@ export async function dashboardRoutes(fastify: FastifyInstance) {
                             repoName: true,
                             repoFullName: true
                         }
-                    }
+                    },
+                    reviewComments: true
                 }
             });
 
-            return reply.send({ prs });
+            const formattedPrs = prs.map(pr => ({
+                ...pr,
+                githubPrId: pr.githubPrId.toString()
+            }));
+
+            return reply.send({ prs: formattedPrs });
         } catch (error) {
             fastify.log.error(error);
             return reply.code(500).send({ error: 'Internal server error' });

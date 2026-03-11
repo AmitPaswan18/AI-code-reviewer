@@ -6,6 +6,7 @@ import { authRoutes } from './routes/auth';
 import { githubRoutes } from './routes/github';
 import { repositoryRoutes } from './routes/repositories';
 import { dashboardRoutes } from './routes/dashboard';
+import { reviewRoutes } from './routes/reviews';
 
 // Load environment variables from the root .env file
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -27,6 +28,7 @@ fastify.register(authRoutes);
 fastify.register(githubRoutes);
 fastify.register(repositoryRoutes);
 fastify.register(dashboardRoutes);
+fastify.register(reviewRoutes);
 
 // Health check route
 fastify.get('/', async (request, reply) => {

@@ -29,7 +29,9 @@ export function StatusIndicator({ status }: { status: ReviewStatus }) {
     },
   };
 
-  const { icon, label, className } = config[status];
+  const normalizedStatus = (status as string).toLowerCase().replace("in_progress", "streaming") as ReviewStatus;
+  const statusConfig = config[normalizedStatus] || config.pending;
+  const { icon, label, className } = statusConfig;
 
   return (
     <span

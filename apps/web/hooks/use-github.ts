@@ -80,3 +80,28 @@ export function useSearchRepos(clerkId: string, page: number = 1, limit: number 
         enabled: !!clerkId,
     });
 }
+
+export function useReviewPullRequest() {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ clerkId, owner, repo, pullNumber }: { clerkId: string; owner: string; repo: string; pullNumber: string | number }) => {
+            return apiService.reviewPullRequest(clerkId, owner, repo, pullNumber);
+        },
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: GITHUB_KEYS.repoPulls(variables.clerkId, variables.owner, variables.repo) });
+            queryClient.invalidateQueries({ queryKey: ["dashboardStats"] });
+        },
+    });
+}
+
+export function useGetPullRequestById(clerkId: string, prId: string) {
+    return useQuery({
+        queryKey: [...GITHUB_KEYS.all, "pullRequest", clerkId, prId],
+        queryFn: async () => {
+            const data = await apiService.getPullRequestById(clerkId, prId);
+            return data;
+        },
+        enabled: !!clerkId && !!prId,
+    });
+}
