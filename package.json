@@ -3,14 +3,12 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "dev": "concurrently -n \"API,WEB\" -c \"bgMagenta.bold,bgBlue.bold\" \"pnpm --filter @ai-code-reviewer/api dev\" \"pnpm --filter @ai-code-reviewer/web dev\"",
     "build": "turbo run build",
-    "build:packages": "pnpm --filter @repo/db run build && pnpm --filter @ai-platform/ai-core run build",
-    "dev": "concurrently -n \"WEB,API\" -c \"bgBlue.bold,bgMagenta.bold\" \"pnpm --filter web dev\" \"pnpm --filter api dev\"",
-    "dev:turbo": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "db:generate": "pnpm --filter @repo/db run generate",
-    "db:push": "pnpm --filter @repo/db run push"
+    "db:generate": "pnpm --filter @ai-code-reviewer/api run prisma:generate",
+    "db:push": "pnpm --filter @ai-code-reviewer/api run prisma:push",
+    "db:studio": "pnpm --filter @ai-code-reviewer/api run prisma:studio"
   },
   "keywords": [],
   "author": "",
